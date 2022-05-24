@@ -62,7 +62,7 @@ const AuctionDetails = () => {
 
     const getAuction = async () => {
             const {data} = await axios.get(`http://localhost:4941/api/v1/auctions/${params.id}`)
-            const name = categories.filter(c => c.categoryId == data.categoryId)[0].name
+            // const name = categories.filter(c => c.categoryId == data.categoryId)[0].name
             // await setCurrentAuction({
             //     ...currentAuction,
             //     auctionId:data.auctionId,
@@ -133,6 +133,14 @@ const AuctionDetails = () => {
         return closesIn
     }
 
+    const get_category_to_display = () =>{
+        let category
+        if (currentAuction != null) {
+            category = categories.find(obj => {return obj.categoryId === currentAuction.categoryId})
+        }
+        return category!=null?category.name:""
+    }
+
     return(
         <div>
             <Grid container  style={{minHeight: '100vh', minWidth: '100vh'}} direction={"column"}>
@@ -160,7 +168,7 @@ const AuctionDetails = () => {
                                           alignItems="flex-start" direction={"column"}>
                                         <Grid item>
                                             <Typography variant="body1" color="text.primary">
-                                                Category: {currentAuction.categoryName}
+                                                Category: {get_category_to_display()}
                                             </Typography>
                                         </Grid>
                                         <Grid item>
