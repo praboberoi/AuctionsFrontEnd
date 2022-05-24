@@ -25,10 +25,13 @@ const setLocalStorageUser = (key:string, value:user) => window.localStorage.setI
 const getLocalStorageAuctions = (key: string): Array<auction> => JSON.parse(window.localStorage.getItem(key) as string);
 const setLocalStorageAuctions = (key:string, value:Array<auction>) => window.localStorage.setItem(key, JSON.stringify(value));
 
+const getLocalStorageCategories = (key: string): Array<category> => JSON.parse(window.localStorage.getItem(key) as string);
+const setLocalStorageCategories = (key:string, value:Array<category>) => window.localStorage.setItem(key, JSON.stringify(value));
+
 const useStore = create<UserState>((set) => ({
     currentUser: getLocalStorageUser('user') || {userId: -1, token: ""},
-    auctions: [],
-    categories: [],
+    auctions: getLocalStorageAuctions('auctions')|| [],
+    categories: getLocalStorageCategories('categories')||[],
     filteredAuctions: getLocalStorageAuctions('auctions') || [],
     loggedOut:true,
 
@@ -55,6 +58,8 @@ const useStore = create<UserState>((set) => ({
     }),
 
     setCategories:(givenCategories:category[]) => set( () => {
+        setLocalStorageCategories('categories', givenCategories)
+        console.log(givenCategories)
         return{categories: givenCategories}
     }),
 
@@ -63,7 +68,7 @@ const useStore = create<UserState>((set) => ({
         const categories = state.categories
         for (let currAuc of currentAuctions) {
             for (let cat of categories) {
-                if (currAuc.categoryId === cat.categoryId)
+                if (currAuc.categoryId === cat.id)
                     currAuc.categoryName = cat.name
             }
         }
@@ -75,7 +80,7 @@ const useStore = create<UserState>((set) => ({
         const newAuctions = []
         for (let currAuc of auctionsToFilter) {
             for (let cat of givenCategories) {
-                if (currAuc.categoryId === cat.categoryId)
+                if (currAuc.categoryId === cat.id)
                     newAuctions.push(currAuc)
             }
         }

@@ -14,7 +14,7 @@ type auction = {
 }
 
 type category = {
-    categoryId: number,
+    id: number,
     name: string
 }
 

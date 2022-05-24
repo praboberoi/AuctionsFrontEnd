@@ -56,32 +56,37 @@ const AuctionDetails = () => {
     })
 
     const getCategories = async () => {
-        const {data} = await axios.get('http://localhost:4941/api/v1/auctions/categories')
-        setCategories(data)
+        axios.get('http://localhost:4941/api/v1/auctions/categories')
+            .then(({data})=> {
+                // console.log(data)
+                setCategories(data)
+                console.log(categories)
+            })
     }
 
     const getAuction = async () => {
-            const {data} = await axios.get(`http://localhost:4941/api/v1/auctions/${params.id}`)
-            const name = categories.filter(c => c.categoryId == data.categoryId)[0].name
-            // await setCurrentAuction({
-            //     ...currentAuction,
-            //     auctionId:data.auctionId,
-            //     title: data.title,
-            //     endDate: data.endDate,
-            //     categoryId: data.categoryId,
-            //     reserve: data.reserve,
-            //     sellerId: data.sellerId,
-            //     numBids: data.numBids,
-            //     highestBid: data.highestBid === null ? 0 : data.highestBid,
-            //     sellerLastName: data.sellerLastName,
-            //     sellerFirstName: data.sellerFirstName,
-            //     description: data.description,
-            //     categoryName: name,
-            // })
-        setCurrentAuction(data)
-        // @ts-ignore
-        this.setState()
-            console.log(currentAuction)
+        const {data} = await axios.get(`http://localhost:4941/api/v1/auctions/${params.id}`)
+        console.log(data)
+
+        const name = categories.filter((c:any) => c.id == data.categoryId)[0].name
+
+        setCurrentAuction({
+            ...currentAuction,
+            auctionId:data.auctionId,
+            title: data.title,
+            endDate: data.endDate,
+            categoryId: data.categoryId,
+            reserve: data.reserve,
+            sellerId: data.sellerId,
+            numBids: data.numBids,
+            highestBid: data.highestBid === null ? 0 : data.highestBid,
+            sellerLastName: data.sellerLastName,
+            sellerFirstName: data.sellerFirstName,
+            description: data.description,
+            categoryName: name,
+        })
+
+
     }
 
     const getBidderDetails = async () => {
@@ -102,7 +107,7 @@ const AuctionDetails = () => {
 
            } catch (error:any) {
                setErrorFlag(true)
-               setErrorMessage(error.response.statusText)
+               // setErrorMessage(error.response.statusText)
            }
        }
        getActionDetails().then(() => {

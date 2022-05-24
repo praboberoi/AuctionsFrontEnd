@@ -80,7 +80,7 @@ const Auctions = () => {
         setPagination({...pagination, startIndex: 0, count: auctionsPerPage, params:`&startIndex=0&count=${auctionsPerPage}`})
         let currentParams = ""
         if (selectedCategories.length > 0) {
-            selectedCategories.map(c => currentParams = currentParams + `categoryIds=${c.categoryId}&`)
+            selectedCategories.map(c => currentParams = currentParams + `categoryIds=${c.id}&`)
             currentParams = currentParams.slice(0, currentParams.length - 1)
 
         }
