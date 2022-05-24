@@ -31,6 +31,7 @@ const MenuBar = (props: { items: string[], searchBar:boolean }) => {
                 setErrorFlag(false)
                 setIsLoggedOut(true)
                 setCurrentUser({userId: -1, token: ""})
+                setTimeout(() => navigate("/Auctions"), 2000)
             }), (error) => {
                 setErrorFlag(true)
                 setErrorMessage(error.response.statusText)

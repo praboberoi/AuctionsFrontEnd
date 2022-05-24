@@ -1,33 +1,81 @@
 import Card from "@mui/material/Card";
 import CardMedia from "@mui/material/CardMedia";
 import CardContent from "@mui/material/CardContent";
-import {Avatar, Button, CardActions, Grid} from "@mui/material";
+import {
+    Alert,
+    Avatar,
+    Button,
+    CardActions,
+    Dialog, DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    Grid,
+    IconButton, Snackbar
+} from "@mui/material";
 import Typography from "@mui/material/Typography";
 import React from "react";
 import {useNavigate} from "react-router-dom";
+import {differenceInDays, formatDistance} from "date-fns"
+import {useUserStore} from "../store";
+import {Delete} from "@mui/icons-material";
+import axios from "axios";
 
 
 
 export const AuctionsListObject = (props: {currentAuction: auction}) => {
-    const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     const [currentAuction] = React.useState<auction>(props.currentAuction)
     const [auctionImage] = React.useState<string>(`http://localhost:4941/api/v1/auctions/${props.currentAuction.auctionId}/image`)
     const [sellerImage] = React.useState<string>(`http://localhost:4941/api/v1/users/${props.currentAuction.sellerId}/image`)
+    const currentUser = useUserStore(state => state.currentUser)
     const navigate = useNavigate();
+    const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false)
+    const [errorFlag, setErrorFlag] = React.useState(false);
+    const [errorMessage, setErrorMessage] = React.useState("");
+    const removeAuction = useUserStore(state => state.removeAuction)
+    const [auctionDeleted, setAuctionDeleted] = React.useState(false)
 
     const getDate = () => {
-        let closesIn: string;
         const endDate = new Date(currentAuction.endDate);
         const now = new Date();
-        const totalDays = now.valueOf() - endDate.valueOf();
-        if (totalDays === 0)
-            closesIn = "Today"
-        else if (totalDays === 1)
-            closesIn = "Tomorrow"
+        const totalDays = formatDistance(endDate, now, { addSuffix: true })
+        if(totalDays.endsWith('ago'))
+            return `Closed ${totalDays}`
         else
-            closesIn =  `${endDate.getDate()}-${month[endDate.getMonth()]}-${endDate.getFullYear()}`
+            return `Closes ${totalDays}`
+    }
 
-        return closesIn
+    const checkCanEdit = () => {
+        if(currentUser.userId === currentAuction.sellerId)
+            return true
+        else
+            return false
+    }
+
+    const deleteAuction = async () => {
+        axios.delete(`http://localhost:4941/api/v1/auctions/${currentAuction.auctionId}`,
+            {headers:
+                    {
+            'Content-Type': 'application/json',
+            'X-Authorization': `${currentUser.token}`,
+            }})
+            .then(() => {
+                removeAuction(currentAuction)
+                setErrorFlag(false)
+                setErrorMessage("")
+                setOpenDeleteDialog(false)
+                setAuctionDeleted(true)
+            },(error) => {
+                setAuctionDeleted(false)
+                setErrorFlag(true)
+                setErrorMessage(error.response.statusText)
+            })
+
+    }
+    const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway')
+            return;
+        setErrorFlag(false)
     }
 
     return (
@@ -48,7 +96,7 @@ export const AuctionsListObject = (props: {currentAuction: auction}) => {
                     </Grid>
                     <Grid item>
                         <Typography fontSize={12} color={"text.secondary"}>
-                            Closes: {getDate()}
+                            {getDate()}
                         </Typography>
                     </Grid>
                 </Grid>
@@ -78,12 +126,49 @@ export const AuctionsListObject = (props: {currentAuction: auction}) => {
                     </Grid>
                 </Grid>
             </CardContent>
-                <CardActions disableSpacing>
+                <CardActions>
                     <Button size={'small'}
-                            onClick={() => navigate(`/AuctionDetails/${currentAuction.auctionId}`)}>
+                            onClick={ () => navigate(`/auctionDetails/${currentAuction.auctionId}`)}>
                         View Details
                     </Button>
+                    {checkCanEdit() &&
+                        <div>
+                            <Button size={'small'}
+                                    onClick={() => navigate(`/EditAuction/${currentAuction.auctionId}`)}>
+                                Edit
+                            </Button>
+                            <Button size={"small"} onClick={() => {setOpenDeleteDialog(true)}}>Delete</Button>
+                        </div>
+                    }
+
                 </CardActions>
+                <Dialog open={openDeleteDialog}
+                        onClose={() => {setOpenDeleteDialog(false)}}
+                        aria-labelledby="alert-dialog-title"
+                        aria-describedby="alert-dialog-description">
+                    <DialogTitle id="alert-dialog-title">
+                        {"Delete Auction"}
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            Are you sure you want to delete {currentAuction.title}?
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button size={"small"} onClick={deleteAuction} autoFocus>Delete</Button>
+                        <Button size={"small"} onClick={() => {setOpenDeleteDialog(false)}}>Cancel</Button>
+                    </DialogActions>
+                </Dialog>
+                <Snackbar open={errorFlag}
+                          anchorOrigin={{ vertical: 'top', horizontal:'center' }}
+                          autoHideDuration={6000} onClose={handleClose}>
+                    <Alert severity="error" onClose={handleClose}>{errorMessage}</Alert>
+                </Snackbar>
+                <Snackbar open={auctionDeleted && !errorFlag}
+                          anchorOrigin={{ vertical: 'top', horizontal:'center' }}
+                          autoHideDuration={6000} onClose={handleClose}>
+                    <Alert severity="error" onClose={handleClose}>The auctions has been successfully deleted</Alert>
+                </Snackbar>
         </Card>
         </Grid>
     )

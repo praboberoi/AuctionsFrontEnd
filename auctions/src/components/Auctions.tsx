@@ -47,8 +47,8 @@ const Auctions = () => {
         "Ascending By Reserve Price", "Descending By Reserve Price", "Chronologically By Closing date",
         "Reverse Chronologically By Closing date"]
 
-    const serverSortingOptions = ["ALPHABETICAL_ASC", "ALPHABETICAL_DESC", "BIDS_DESC",
-        "BIDS_ASC", "RESERVE_DESC", "RESERVE_ASC", "CLOSING_SOON", "CLOSING_LAST"]
+    const serverSortingOptions = ["ALPHABETICAL_ASC", "ALPHABETICAL_DESC", "BIDS_ASC",
+        "BIDS_DESC", "RESERVE_ASC", "RESERVE_DESC", "CLOSING_SOON", "CLOSING_LAST"]
 
 
     const getFilteredAuctions = async () => {
@@ -120,7 +120,7 @@ const Auctions = () => {
                 <Grid container direction={"column"} spacing={2}>
                     <Grid item xs={12} md={12} lg={12}>
                         <MenuBar key={"/View-Auctions"}
-                            items={currentUser.userId !== -1 ? ["/Account", "/Logout"] : ["/login","/Register"]}
+                            items={currentUser.userId !== -1 ? ["/Account", "/CreateAuction", "/Logout"] : ["/login","/Register"]}
                             searchBar={true}/>
                     </Grid>
                     <Grid item xs={12} md={12} lg={12}>

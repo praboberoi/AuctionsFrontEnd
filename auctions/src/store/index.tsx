@@ -16,6 +16,7 @@ interface UserState {
     filterAuctions:(givenCategories: category[]) => void
     initialiseFilteredAuctions:(givenActions: auction[]) => void
     setLoggedOut:(isLoggedOut:boolean) => void
+    removeAuction:(givenAuction:auction) => void
 
 }
 
@@ -90,6 +91,12 @@ const useStore = create<UserState>((set) => ({
 
     setLoggedOut:(isLoggedOut:boolean) => set(() => {
        return{loggedOut:isLoggedOut}
+    }),
+
+    removeAuction: (givenAuction:auction) => set((state) => {
+        const updatedAuctions = state.auctions.filter(a => a.auctionId !== givenAuction.auctionId)
+        setLocalStorageAuctions('auctions', updatedAuctions)
+        return{auctions:updatedAuctions}
     }),
 
 }))
