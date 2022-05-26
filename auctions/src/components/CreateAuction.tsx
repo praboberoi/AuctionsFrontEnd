@@ -72,15 +72,25 @@ const CreateAuction = () => {
     }, [setCategories])
 
     const addAuction = async () => {
-        const {data} = await axios.post(`http://localhost:4941/api/v1/auctions` ,
-            {
+        let auctionData;
+        if (hasReserve) {
+            auctionData = {
                 "title": title,
                 "description": description,
                 "reserve": reserve,
                 "categoryId": category.categoryId,
                 "endDate": endDate
-            },
-
+            }
+        }
+        else {
+           auctionData = {
+                "title": title,
+                "description": description,
+                "categoryId": category.categoryId,
+                "endDate": endDate
+            }
+        }
+        const {data} = await axios.post(`http://localhost:4941/api/v1/auctions` , auctionData,
             {headers: {
                 'X-Authorization': `${currentUser.token}`
             }})
@@ -136,8 +146,8 @@ const CreateAuction = () => {
 
     const checkReserve = (event: { target: { value: any; }; }) => {
         const chosenReserve = event.target.value
-        if (chosenReserve >= 1) {
-            setReserve(chosenReserve)
+        if (chosenReserve >= 1 && !chosenReserve.includes('.')) {
+            setReserve(parseInt(chosenReserve, 10))
             setInvalidReserve(false)
         } else {
             setInvalidReserve(true)
@@ -189,11 +199,12 @@ const CreateAuction = () => {
         if (reason === 'clickaway')
             return;
         setErrorFlag(false)
+        setAuctionCreated(false)
     }
 
     return(
         <div>
-            <MenuBar key={"/CreateAuction"} items={["/Auctions","/Logout"]} searchBar={false}/>
+            <MenuBar key={"/CreateAuction"} items={["/Auctions","/Account","/Logout"]} searchBar={false}/>
             <Paper elevation={24} sx={{mx: 50, my: 5, px: 5, py:5}}>
                 <Grid
                     container
@@ -314,13 +325,13 @@ const CreateAuction = () => {
             </Paper>
             <Snackbar open={errorFlag}
                       anchorOrigin={{ vertical: 'top', horizontal:'center' }}
-                      autoHideDuration={6000} onClose={handleClose}>
+                      autoHideDuration={2000} onClose={handleClose}>
                 <Alert severity="error" onClose={handleClose}>{errorMessage}</Alert>
             </Snackbar>
             <Snackbar open={auctionCreated && !errorFlag}
                       anchorOrigin={{ vertical: 'top', horizontal:'center' }}
-                      autoHideDuration={6000} onClose={handleClose}>
-                <Alert severity="error" onClose={handleClose}>The auctions has been successfully created</Alert>
+                      autoHideDuration={2000} onClose={handleClose}>
+                <Alert severity="success" onClose={handleClose}>The auctions has been successfully created</Alert>
             </Snackbar>
         </div>
     )

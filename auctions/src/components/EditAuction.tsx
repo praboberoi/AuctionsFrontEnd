@@ -43,12 +43,13 @@ const EditAuction = () => {
     const [auctionUpdated, setAuctionUpdated] = React.useState(false)
     const setAuctions = useUserStore(state => state.setAuctions)
     const [imageChanged, setImageChanged] = React.useState(false)
+    const [dateChanged, setDateChanged] = React.useState(false)
     const params = useParams();
     const [category, setCategory] = React.useState<category>({
         categoryId: -1,
         name: "",
     })
-    const [currentAuction, setCurrentAuction] = React.useState<auction>({
+    const [currentAuction, setCurrentAuction] = React.useState({
         auctionId: -1,
         title: "",
         description:"",
@@ -99,32 +100,55 @@ const EditAuction = () => {
         else {
             getCategories().then()
         }
-    }, [setCategories])
+    }, [])
 
     const updateAuction = async () => {
         if (currentAuction.sellerId !== currentUser.userId) {
             setErrorFlag(true)
             setErrorMessage("You are not authorized to make changes to this auction")
         } else {
-
-            const {data} = await axios.patch(`http://localhost:4941/api/v1/auctions/${params.id}` ,
-                {
+            let data;
+            if (dateChanged && hasReserve) {
+                data = {
                     "title": currentAuction.title,
                     "description": currentAuction.description,
                     "reserve": currentAuction.reserve,
                     "categoryId": category.categoryId,
                     "endDate": currentAuction.endDate,
-                },
-
-                {headers: {
+                }
+            } else if (dateChanged && !hasReserve) {
+                data = {
+                    "title": currentAuction.title,
+                    "description": currentAuction.description,
+                    "categoryId": category.categoryId,
+                    "endDate": currentAuction.endDate,
+                }
+            } else if(!dateChanged && hasReserve) {
+                data = {
+                    "title": currentAuction.title,
+                    "description": currentAuction.description,
+                    "reserve": currentAuction.reserve,
+                    "categoryId": category.categoryId,
+                }
+            } else {
+                data = {
+                    "title": currentAuction.title,
+                    "description": currentAuction.description,
+                    "categoryId": category.categoryId,
+                }
+            }
+            await axios.patch(`http://localhost:4941/api/v1/auctions/${params.id}`, data,
+                {
+                    headers: {
                         'Content-Type': 'application/json',
                         'X-Authorization': `${currentUser.token}`,
-                    }})
+                    }
+                })
+            console.log(data)
 
             setErrorFlag(false)
             setErrorMessage("")
         }
-
 
         if(imageChanged) {
             await axios.put(`http://localhost:4941/api/v1/auctions/${currentAuction.auctionId}/image`, imageFile, {
@@ -137,7 +161,7 @@ const EditAuction = () => {
         setAuctions([])
     }
 
-    const createAuction = async () => {
+    const editAuction = async () => {
         try {
             await updateAuction()
             setAuctionUpdated(true)
@@ -184,7 +208,7 @@ const EditAuction = () => {
 
     const checkReserve = (event: { target: { value: any; }; }) => {
         setCurrentAuction({...currentAuction, reserve:event.target.value})
-        if (event.target.value >= 1) {
+        if (event.target.value >= 1 && !event.target.value.toString().includes('.')) {
             setInvalidReserve(false)
         } else {
             setInvalidReserve(true)
@@ -199,8 +223,14 @@ const EditAuction = () => {
             setInvalidEndDate(true)
         }
         else {
+
+            setDateChanged(true)
             setInvalidEndDate(false)
-            setCurrentAuction({...currentAuction, endDate:chosenDate.toLocaleDateString().split('/').reverse().join('-') + ' ' + chosenDate.toLocaleTimeString()})
+            setCurrentAuction({
+                ...currentAuction,
+                endDate:chosenDate.toLocaleDateString().split('/').reverse().join('-')
+                        + ' ' + chosenDate.toLocaleTimeString()
+            })
 
         }
 
@@ -238,15 +268,14 @@ const EditAuction = () => {
         if (reason === 'clickaway')
             return;
         setErrorFlag(false)
+        setAuctionUpdated(false)
     }
 
     const getDate = () => {
         const date = new Date(currentAuction.endDate)
-        // @ts-ignore
-        if(!isNaN(date)) {
+        if(date.toString() !== 'Invalid Date') {
             const currentDate = date.toLocaleDateString().split('/').reverse().join('-')
             const currentTime = date.toLocaleTimeString()
-            console.log(`${currentDate}T${currentTime}`)
             return `${currentDate}T${currentTime}`
         }
 
@@ -255,7 +284,7 @@ const EditAuction = () => {
 
     return(
         <div>
-            <MenuBar key={"/EditAuction"} items={["/Auctions","/Logout"]} searchBar={false}/>
+            <MenuBar key={"/EditAuction"} items={["/Auctions","/Account", "/Logout"]} searchBar={false}/>
             <Paper elevation={24} sx={{mx: 50, my: 5, px: 5, py:5}}>
                 <Grid
                     container
@@ -288,7 +317,7 @@ const EditAuction = () => {
                             disablePortal
                             options={categories}
                             getOptionLabel={(option) => option.name}
-                            value={category}
+                            value={category.categoryId !== -1 ? category : null}
                             size={"small"}
                             onChange={checkCategory}
                             renderInput={(params) =>
@@ -312,7 +341,7 @@ const EditAuction = () => {
                                         <TextField
                                             label={"Reserve"}
                                             type={"number"}
-                                            value={currentAuction.reserve.toString() || 1}
+                                            value={currentAuction.reserve.toString() || ""}
                                             disabled={!hasReserve}
                                             required={hasReserve}
                                             size={"small"}
@@ -362,7 +391,7 @@ const EditAuction = () => {
                 </Grid>
                 <Grid sx={{ '& button': { m: 1 } }}>
                     <Button color="primary" size="small" variant="contained"
-                            onClick={createAuction}
+                            onClick={editAuction}
                             disabled={invalidTitle || invalidEndDate || noImageFile || invalidDescription || noCategory || (hasReserve && invalidReserve)}>
                         Submit</Button>
                     <label htmlFor="contained-button-file">
@@ -381,13 +410,13 @@ const EditAuction = () => {
             </Paper>
             <Snackbar open={errorFlag}
                       anchorOrigin={{ vertical: 'top', horizontal:'center' }}
-                      autoHideDuration={6000} onClose={handleClose}>
+                      autoHideDuration={2000} onClose={handleClose}>
                 <Alert severity="error" onClose={handleClose}>{errorMessage}</Alert>
             </Snackbar>
             <Snackbar open={auctionUpdated && !errorFlag}
                       anchorOrigin={{ vertical: 'top', horizontal:'center' }}
-                      autoHideDuration={6000} onClose={handleClose}>
-                <Alert severity="error" onClose={handleClose}>The auctions has been successfully updated</Alert>
+                      autoHideDuration={2000} onClose={handleClose}>
+                <Alert severity="success" onClose={handleClose}>The auctions has been successfully updated</Alert>
             </Snackbar>
         </div>
     )

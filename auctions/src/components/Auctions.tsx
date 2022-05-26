@@ -118,7 +118,7 @@ const Auctions = () => {
         <div>
             <Grid container style={{minHeight: '100vh', minWidth: '100vh'}} direction={"column"}>
                 <Grid container direction={"column"} spacing={2}>
-                    <Grid item xs={12} md={12} lg={12}>
+                    <Grid item>
                         <MenuBar key={"/View-Auctions"}
                             items={currentUser.userId !== -1 ? ["/Account", "/CreateAuction", "/Logout"] : ["/login","/Register"]}
                             searchBar={true}/>
@@ -169,12 +169,12 @@ const Auctions = () => {
                                                 </InputAdornment>
                                         }}/>
                                 </Grid>
-                                <Grid item  xs={"auto"} md={"auto"} lg={"auto"}>
+                                <Grid item>
                                     <Button color="primary" variant="contained" component="span" onClick={updateParams}>
                                         Filter
                                     </Button>
                                 </Grid>
-                                <Grid item xs={"auto"} md={"auto"} lg={"auto"}>
+                                <Grid item>
                                     <Button color="secondary" variant="contained" component="span" onClick={() => window.location.reload()}>
                                         Clear
                                     </Button>
@@ -183,7 +183,7 @@ const Auctions = () => {
                         </Paper>
                     </Grid>
                 </Grid>
-                 <Grid container direction={"row"} justifyContent="space-around" alignItems="center">
+                 <Grid container direction={"row"} justifyContent="center" spacing={3} alignItems="center">
                         {auctions_rows()}
                 </Grid>
                 <Box justifyContent={"center"} alignContent={"center"} display={"flex"} sx={{my:2, mx:2}}>

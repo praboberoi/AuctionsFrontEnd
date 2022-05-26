@@ -11,7 +11,7 @@ import {
     DialogContentText,
     DialogTitle,
     Grid,
-    IconButton, Snackbar
+    IconButton, InputAdornment, Snackbar, TextField
 } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import React from "react";
@@ -34,6 +34,13 @@ export const AuctionsListObject = (props: {currentAuction: auction}) => {
     const [errorMessage, setErrorMessage] = React.useState("");
     const removeAuction = useUserStore(state => state.removeAuction)
     const [auctionDeleted, setAuctionDeleted] = React.useState(false)
+    const [openLoginDialog, setOpenLoginDialog] = React.useState(false)
+    const [openBiddingDialog, setOpenBiddingDialog] = React.useState(false)
+    const [invalidBid, setInvalidBid] = React.useState(true)
+    const [currentBid, setCurrentBid]= React.useState(1)
+    const [bidPaced, setBidPlaced] = React.useState(false)
+    const [successMessage, setSuccessMessage] = React.useState("")
+
 
     const getDate = () => {
         const endDate = new Date(currentAuction.endDate);
@@ -46,10 +53,44 @@ export const AuctionsListObject = (props: {currentAuction: auction}) => {
     }
 
     const checkCanEdit = () => {
-        if(currentUser.userId === currentAuction.sellerId)
-            return true
-        else
-            return false
+        return currentUser.userId === currentAuction.sellerId;
+    }
+
+    const checkBid = (event:any) => {
+        setCurrentBid(parseInt(event.target.value, 10))
+        // @ts-ignore
+        if(event.target.value < currentAuction.highestBid || event.target.value.includes('.')) {
+            setInvalidBid(true)
+        } else {
+            setInvalidBid(false)
+        }
+
+    }
+
+    const bid = () => {
+        setOpenBiddingDialog(false)
+        axios.post(`http://localhost:4941/api/v1/auctions/${currentAuction.auctionId}/bids`,
+            {"amount": currentBid},
+            {headers:{
+                'X-Authorization': currentUser.token
+                }})
+            .then(() => {
+               setErrorFlag(false)
+                setBidPlaced(true)
+                setSuccessMessage("Bid successfully placed")
+               setErrorMessage("")
+                setTimeout(() => window.location.reload(), 2000)
+            }, (error) => {
+                setBidPlaced(false)
+                setSuccessMessage("")
+                setErrorFlag(true)
+                setErrorMessage(error.response.statusText)
+            })
+    }
+
+
+    const canBid = () => {
+        return currentUser.userId !== currentAuction.sellerId && new Date(currentAuction.endDate) > new Date();
     }
 
     const deleteAuction = async () => {
@@ -65,8 +106,11 @@ export const AuctionsListObject = (props: {currentAuction: auction}) => {
                 setErrorMessage("")
                 setOpenDeleteDialog(false)
                 setAuctionDeleted(true)
+                setSuccessMessage("Auction deleted successfully")
+                setTimeout(()=> window.location.reload(), 2000)
             },(error) => {
                 setAuctionDeleted(false)
+                setSuccessMessage("")
                 setErrorFlag(true)
                 setErrorMessage(error.response.statusText)
             })
@@ -76,16 +120,26 @@ export const AuctionsListObject = (props: {currentAuction: auction}) => {
         if (reason === 'clickaway')
             return;
         setErrorFlag(false)
+        setAuctionDeleted(false)
+    }
+
+    const placeBid = () => {
+        if(currentUser.userId === -1)
+            setOpenLoginDialog(true)
+        else
+            setOpenBiddingDialog(true)
+
     }
 
     return (
         <Grid item sx={{my:2}}>
-            <Card sx={{ maxWidth: 345}} raised={true}>
+            <Card sx={{ maxWidth: 400}} raised={true}>
             <CardMedia
                 component="img"
-                height="140"
+                height="250"
                 image={auctionImage}
-                alt="green iguana"
+                alt="Auction Image"
+                sx={{objectFit:"contain"}}
             />
             <CardContent>
                 <Grid container justifyContent="space-between" alignItems="flex-start" direction={"row"}>
@@ -110,7 +164,7 @@ export const AuctionsListObject = (props: {currentAuction: auction}) => {
                         </Typography>
                     </Grid>
                     <Grid item>
-                        <Avatar src={sellerImage}/>
+                        <Avatar src={sellerImage} style={{maxWidth: '100%', maxHeight: '100%'}}/>
                     </Grid>
                     <Grid container justifyContent="space-between" alignItems="flex-start" direction={"row"} sx={{pt:1}}>
                         <Grid item>
@@ -127,22 +181,34 @@ export const AuctionsListObject = (props: {currentAuction: auction}) => {
                 </Grid>
             </CardContent>
                 <CardActions>
-                    <Button size={'small'}
-                            onClick={ () => navigate(`/auctionDetails/${currentAuction.auctionId}`)}>
-                        View Details
-                    </Button>
-                    {checkCanEdit() &&
-                        <div>
+                    <Grid container justifyContent="space-evenly" alignItems="center">
+                        <Grid item>
                             <Button size={'small'}
-                                    onClick={() => navigate(`/EditAuction/${currentAuction.auctionId}`)}>
-                                Edit
+                                    onClick={ () => navigate(`/auctionDetails/${currentAuction.auctionId}`)}>
+                                View Details
                             </Button>
-                            <Button size={"small"} onClick={() => {setOpenDeleteDialog(true)}}>Delete</Button>
-                        </div>
+                        </Grid>
+                        {canBid() &&
+                            <Grid item>
+                                <Button size={"small"} onClick={placeBid}>Place Bid</Button>
+                            </Grid>
+                        }
+                    {checkCanEdit() &&
+                        <>
+                            <Grid item>
+                                <Button size={'small'}
+                                        onClick={() => navigate(`/EditAuction/${currentAuction.auctionId}`)}>
+                                    Edit
+                                </Button>
+                            </Grid>
+                            <Grid item>
+                                <Button size={"small"} onClick={() => {setOpenDeleteDialog(true)}}>Delete</Button>
+                            </Grid>
+                        </>
                     }
-
+                    </Grid>
                 </CardActions>
-                <Dialog open={openDeleteDialog}
+                <Dialog fullWidth={true} maxWidth={'xs'} open={openDeleteDialog}
                         onClose={() => {setOpenDeleteDialog(false)}}
                         aria-labelledby="alert-dialog-title"
                         aria-describedby="alert-dialog-description">
@@ -159,15 +225,66 @@ export const AuctionsListObject = (props: {currentAuction: auction}) => {
                         <Button size={"small"} onClick={() => {setOpenDeleteDialog(false)}}>Cancel</Button>
                     </DialogActions>
                 </Dialog>
+
+                <Dialog fullWidth={true} maxWidth={'xs'} open={openLoginDialog}
+                        onClose={() => {setOpenLoginDialog(false)}}
+                        aria-labelledby="alert-dialog-title"
+                        aria-describedby="alert-dialog-description">
+                    <DialogTitle id="alert-dialog-title">
+                        {"Login/Register"}
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            Please log or register in to place a bid
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button size={"small"} onClick={() => navigate('/Login')} autoFocus>Login</Button>
+                        <Button size={"small"} onClick={() => navigate('/Register')}>Register</Button>
+                        <Button size={"small"} onClick={() => {setOpenLoginDialog(false)}}>Cancel</Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog fullWidth={true} maxWidth={'xs'} open={openBiddingDialog} onClose={() => {setOpenBiddingDialog(false)}}>
+                    <DialogTitle>
+                        {"Place Bid"}
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                                    Please enter a bid value
+                        </DialogContentText>
+                        <TextField
+                            sx={{mt:1}}
+                            label={"Reserve"}
+                            type={"number"}
+                            required
+                            size={"small"}
+                            fullWidth
+                            error={invalidBid}
+                            helperText={invalidBid  ? "Chosen bid value is invalid" : ""}
+                            onChange={checkBid}
+                            InputProps={{
+                                startAdornment:
+                                    <InputAdornment position="start">
+                                        $
+                                    </InputAdornment>
+                            }}/>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button size={"small"}  onClick={bid} disabled={invalidBid} autoFocus>Bid</Button>
+                        <Button size={"small"} onClick={() => {setOpenBiddingDialog(false)}}>Cancel</Button>
+                    </DialogActions>
+                </Dialog>
+
                 <Snackbar open={errorFlag}
                           anchorOrigin={{ vertical: 'top', horizontal:'center' }}
-                          autoHideDuration={6000} onClose={handleClose}>
+                          autoHideDuration={2000} onClose={handleClose}>
                     <Alert severity="error" onClose={handleClose}>{errorMessage}</Alert>
                 </Snackbar>
-                <Snackbar open={auctionDeleted && !errorFlag}
+                <Snackbar open={ (bidPaced || auctionDeleted) && !errorFlag }
                           anchorOrigin={{ vertical: 'top', horizontal:'center' }}
-                          autoHideDuration={6000} onClose={handleClose}>
-                    <Alert severity="error" onClose={handleClose}>The auctions has been successfully deleted</Alert>
+                          autoHideDuration={2000} onClose={handleClose}>
+                    <Alert severity="success" onClose={handleClose}>{successMessage}</Alert>
                 </Snackbar>
         </Card>
         </Grid>

@@ -32,11 +32,17 @@ const Login = () => {
     const currentUser = useUserStore(state => state.currentUser)
     const loggedOut = useUserStore(state => state.loggedOut)
     const setLoggedOut = useUserStore(state => state.setLoggedOut)
+    const [loggedIn, setLoggedIn] = React.useState(false)
 
 
     React.useEffect(() => {
-        if (currentUser.userId !== -1)
+        if (currentUser.userId !== -1) {
+            setLoggedIn(true)
             navigate('/Auctions')
+        } else {
+            setLoggedIn(false)
+        }
+
     },[])
 
 
@@ -67,7 +73,8 @@ const Login = () => {
                 setErrorMessage("")
                 setCurrentUser(response.data)
                 setLoggedOut(false)
-                navigate('/auctions');
+                setLoggedIn(true)
+                setTimeout( () => navigate('/auctions'), 2000)
             }, (error) => {
                 setErrorFlag(true)
                 if(error.response.status === 400)
@@ -128,9 +135,14 @@ const Login = () => {
         </Grid>
         <Snackbar open={errorFlag}
                   anchorOrigin={{ vertical: 'top', horizontal:'center' }}
-                  autoHideDuration={6000}
+                  autoHideDuration={2000}
                   onClose={handleClose}>
-            <Alert severity="error" onClose={handleClose}>{errorMessage}</Alert>
+            <Alert severity="success" onClose={handleClose}>{errorMessage}</Alert>
+        </Snackbar>
+        <Snackbar open={loggedIn}
+                  anchorOrigin={{ vertical: 'top', horizontal:'center' }}
+                  autoHideDuration={2000} onClose={handleClose}>
+            <Alert severity="success" onClose={handleClose}>Logged in successfully</Alert>
         </Snackbar>
     </div>
 )
