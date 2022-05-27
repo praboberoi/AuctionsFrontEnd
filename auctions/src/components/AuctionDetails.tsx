@@ -270,7 +270,9 @@ const AuctionDetails = () => {
                                     </Grid>
                                 </CardContent>
                                 <CardActions disableSpacing>
-                                    <Button onClick={placeBid}>Place Bid</Button>
+                                    {new Date(currentAuction.endDate) > new Date() &&
+                                        <Button onClick={placeBid}>Place Bid</Button>
+                                    }
                                 </CardActions>
                             </Card>
                         </Grid>

@@ -59,7 +59,7 @@ export const AuctionsListObject = (props: {currentAuction: auction}) => {
     const checkBid = (event:any) => {
         setCurrentBid(parseInt(event.target.value, 10))
         // @ts-ignore
-        if(event.target.value < currentAuction.highestBid || event.target.value.includes('.')) {
+        if(event.target.value <= currentAuction.highestBid || event.target.value.includes('.')) {
             setInvalidBid(true)
         } else {
             setInvalidBid(false)

@@ -216,6 +216,7 @@ const Account = () => {
     }
     const deleteUserImage = async () => {
         await updateDeleteButtonState()
+        setImg("")
         if (userHasProfileImage) {
             axios.delete(`http://localhost:4941/api/v1/users/${currentUser.userId}/image`, {headers: {'X-Authorization': currentUser.token}})
                 .then(() => {
