@@ -40,6 +40,7 @@ const Auctions = () => {
     const [errorMessage, setErrorMessage] = React.useState("");
     const setCategoryNames = useUserStore(state => state.setCategoryNames)
     const currentUser = useUserStore(state => state.currentUser)
+    const [currentPage, setCurrentPage] = React.useState(1)
 
 
     const sortingOptions = ["Ascending Alphabetically", "Descending Alphabetically",
@@ -80,20 +81,24 @@ const Auctions = () => {
         setPagination({...pagination, startIndex: 0, count: auctionsPerPage, params:`&startIndex=0&count=${auctionsPerPage}`})
         let currentParams = ""
         if (selectedCategories.length > 0) {
+            setCurrentPage(1)
             selectedCategories.map(c => currentParams = currentParams + `categoryIds=${c.categoryId}&`)
             currentParams = currentParams.slice(0, currentParams.length - 1)
 
         }
 
         if (textFilter.length > 0 ) {
+            setCurrentPage(1)
             currentParams = currentParams + `&q=${textFilter}`
         }
 
         if (openClose.length > 0) {
+            setCurrentPage(1)
             currentParams = currentParams + `&status=${openClose}`
         }
 
         if(sortBy.length > 0) {
+            setCurrentPage(1)
             const index = sortingOptions.indexOf(sortBy)
             currentParams = currentParams + `&sortBy=${serverSortingOptions[index]}`
         }
@@ -102,8 +107,9 @@ const Auctions = () => {
     }
 
     const setFromToAuctions = async (event:any, page:number) => {
+        setCurrentPage(page)
         const from = (page - 1) * auctionsPerPage
-        const to = (page - 1) * auctionsPerPage + auctionsPerPage
+        const to = auctionsPerPage
         setPagination({...pagination, startIndex:from, count: to, params:`&startIndex=${from}&count=${to}`})
     }
 
@@ -131,7 +137,7 @@ const Auctions = () => {
                                         disablePortal
                                         options={["CLOSED", "OPEN"]}
                                         size={"small"}
-                                        onChange={(event,value) => setOpenClose(value !== null ? value: "")}
+                                        onChange={(event,value) => {setOpenClose(value !== null ? value: "")}}
                                         renderInput={(params) => <TextField {...params} label="Open/Closed" />}
                                     />
                                 </Grid>
@@ -187,7 +193,7 @@ const Auctions = () => {
                         {auctions_rows()}
                 </Grid>
                 <Box justifyContent={"center"} alignContent={"center"} display={"flex"} sx={{my:2, mx:2}}>
-                    <Pagination showLastButton showFirstButton
+                    <Pagination showLastButton showFirstButton page={currentPage}
                                 count={Math.ceil(pagination.totalAuctions/auctionsPerPage)} onChange={setFromToAuctions}/>
                 </Box>
             </Grid>
