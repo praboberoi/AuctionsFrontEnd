@@ -144,7 +144,6 @@ const EditAuction = () => {
                         'X-Authorization': `${currentUser.token}`,
                     }
                 })
-            console.log(data)
 
             setErrorFlag(false)
             setErrorMessage("")

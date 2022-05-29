@@ -248,7 +248,6 @@ const Account = () => {
             setErrorFlag(true)
             setErrorMessage(error.response.statusText)
             setProfileUpdateMessage("")
-            console.log(error)
         }
 
     }

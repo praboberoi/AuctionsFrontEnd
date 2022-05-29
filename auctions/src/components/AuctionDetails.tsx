@@ -159,6 +159,11 @@ const AuctionDetails = () => {
 
     }
 
+    const canBid = () => {
+        return currentUser.userId !== currentAuction.sellerId && new Date(currentAuction.endDate) > new Date();
+    }
+
+
     const bid = () => {
         setOpenBiddingDialog(false)
         axios.post(`http://localhost:4941/api/v1/auctions/${currentAuction.auctionId}/bids`,
@@ -270,7 +275,7 @@ const AuctionDetails = () => {
                                     </Grid>
                                 </CardContent>
                                 <CardActions disableSpacing>
-                                    {new Date(currentAuction.endDate) > new Date() &&
+                                    {canBid() &&
                                         <Button onClick={placeBid}>Place Bid</Button>
                                     }
                                 </CardActions>
